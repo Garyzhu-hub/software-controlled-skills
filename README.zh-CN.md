@@ -6,6 +6,8 @@
 
 当前版本为 `2.1.0`，主要适配 Codex 风格 Agent、Claude Code、Trae 和 Cursor。
 
+![软件开发智能控制三技能使用说明](assets/software-controlled-skills-guide.png)
+
 ## 项目内容
 
 - `core/`：三个核心 Skill 的标准定义。
@@ -111,4 +113,3 @@ cp .trae/rules/project_rules.md /path/to/project/.trae/rules/project_rules.md
 ## 许可证
 
 MIT。详见 `LICENSE`。
-
