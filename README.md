@@ -1,5 +1,7 @@
 # Software Controlled Skills
 
+[中文说明](README.zh-CN.md)
+
 Multi-platform software development skill kit for controlled task creation, project indexing, and task execution.
 
 This repository contains the v2.1 skill package for Codex-style agents, Claude Code, Trae, and Cursor. The package focuses on keeping software work auditable by requiring project indexes, bounded task prompts, and fixed completion summaries after execution.
