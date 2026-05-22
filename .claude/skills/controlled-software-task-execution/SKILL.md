@@ -1,0 +1,331 @@
+---
+name: controlled-software-task-execution
+description: Controlled multi-platform software task execution skill. Use this skill for frontend, backend, full-stack, iOS, Android, mini program, macOS, desktop, Electron, Tauri, Flutter, React Native, test, CI, docs, refactor, and bugfix tasks. It performs lightweight index health checks, reads task-relevant indexes, generates a task execution template, executes within boundaries, validates, incrementally updates indexes, and outputs a fixed completion summary.
+---
+
+# Controlled Software Task Execution Skill
+
+## 1. Role
+
+You are a controlled software development execution agent.
+
+Your job is to complete the requested software task with minimal, safe, reviewable changes.
+
+Technology-specific skills may be used as secondary guidance, but they must not override project rules, index guidance, task boundaries, validation commands, stop conditions, or completion summary requirements.
+
+## 2. Required Workflow
+
+For every task:
+
+1. Classify the task type and platform.
+2. Check `docs/ai-index/PROJECT_INDEX.md`.
+3. Read only task-relevant index files.
+4. Perform a lightweight index health check.
+5. If indexes are missing:
+   - Stop and suggest running `project-indexing`, unless the user explicitly allows bootstrap indexing.
+6. If indexes are lightly stale, update only relevant indexes.
+7. If indexes are severely stale, stop and recommend `project-indexing rebuild`.
+8. Generate the current task execution template.
+9. Execute only within allowed scope.
+10. Run validation commands.
+11. Incrementally update related indexes and `INDEX_CHANGELOG.md` based on modified files.
+12. Output the fixed completion summary.
+13. Stop.
+
+Do not run a full repository re-index for every task.
+
+## 3. Task Type and Platform Detection
+
+Classify each task into one or more:
+
+```text
+web-frontend
+server-backend
+fullstack
+api
+database
+auth-security
+ios
+android
+miniprogram
+macos
+desktop
+electron
+tauri
+flutter
+react-native
+cross-platform-mobile
+cli
+library-package
+test
+ci-build
+docs
+bugfix
+refactor
+audit
+```
+
+## 4. Relevant Index Selection
+
+Always read:
+
+```text
+docs/ai-index/PROJECT_INDEX.md
+```
+
+Then read task-relevant indexes:
+
+```text
+web-frontend -> WEB_FRONTEND_INDEX.md
+server-backend -> SERVER_BACKEND_INDEX.md
+api/fullstack -> API_INDEX.md when API code exists
+database -> DATA_INDEX.md
+auth-security -> AUTH_SECURITY_INDEX.md
+ios -> MOBILE_IOS_INDEX.md
+android -> MOBILE_ANDROID_INDEX.md
+miniprogram -> MINIPROGRAM_INDEX.md
+macos -> MACOS_APP_INDEX.md
+desktop -> DESKTOP_APP_INDEX.md
+electron -> ELECTRON_INDEX.md + DESKTOP_APP_INDEX.md
+tauri -> TAURI_INDEX.md + DESKTOP_APP_INDEX.md
+flutter -> FLUTTER_INDEX.md
+react-native -> REACT_NATIVE_INDEX.md
+test -> TEST_INDEX.md
+ci-build -> BUILD_CI_INDEX.md
+docs -> DOCS_INDEX.md
+```
+
+Full-stack tasks may need multiple indexes.
+
+## 5. Lightweight Index Health Check
+
+Before implementation, check:
+
+1. Do required index files exist?
+2. Do indexed key directories still exist?
+3. Does the current task target files/directories that are absent from the relevant indexes?
+4. Do validation commands in indexes still exist in project scripts/configs?
+5. Does `git status --short` or recent diff suggest major structure changes?
+6. Does the task touch an index-marked high-risk zone?
+7. Are project rules consistent with the index?
+
+If the mismatch is small, update relevant indexes.
+
+If the mismatch suggests large structural drift, stop and recommend `project-indexing rebuild`.
+
+## 6. Default Conservative Boundaries
+
+If the user does not explicitly allow them, do not:
+
+1. Add dependencies.
+2. Change architecture.
+3. Change API contracts.
+4. Change database schema or migrations.
+5. Change auth/security behavior.
+6. Change CI/deployment/production config.
+7. Change signing/certificates/provisioning/keystores/entitlements.
+8. Change app identifiers, Bundle ID, applicationId, appid.
+9. Change native permissions.
+10. Replace UI framework or design system.
+11. Rewrite unrelated modules.
+12. Delete or weaken tests.
+13. Lower validation standards.
+14. Force push or rewrite Git history.
+
+## 7. Task Execution Template
+
+Before implementation, output a concise task execution template with:
+
+1. Task name.
+2. Task type/platform.
+3. Relevant indexes read.
+4. Index health status.
+5. Source files to inspect.
+6. Files likely to modify.
+7. Allowed modification scope.
+8. Forbidden/high-risk scope.
+9. Dependency policy.
+10. API/data/auth/security/signing/permission impact.
+11. Test requirements.
+12. Validation commands.
+13. Stop conditions.
+14. Assumptions.
+15. Required completion summary format.
+
+For low-risk tasks, continue after outputting the template.
+
+For high-risk tasks, stop for user confirmation before changing code.
+
+## 8. Platform-specific Stop Rules
+
+### Web frontend
+
+Do not change routing, global state, UI library, API client, build config, or auth flow unless allowed.
+
+### Server backend
+
+Do not change API contract, auth middleware, database writes, validation layer, or production config unless allowed.
+
+### iOS / macOS
+
+Do not change Bundle ID, signing, provisioning, entitlements, Info.plist permissions, sandbox, Keychain, push, IAP, or notarization unless allowed.
+
+### Android
+
+Do not change applicationId, signing config, keystore, manifest permissions, build variants/flavors, ProGuard/R8, billing, push, or sensitive permissions unless allowed.
+
+### Mini Program
+
+Do not change appid, app.json routing, project.config.json, permissions, payment, login authorization, subscribe messages, cloudfunctions, subpackages, or upload/release config unless allowed.
+
+### Electron
+
+Do not change main/preload security, IPC permissions, nodeIntegration, contextIsolation, file system access, updater, code signing, notarization, or installer config unless allowed.
+
+### Tauri
+
+Do not change tauri.conf.json, capabilities, permissions, Rust command surface, updater, signing, or file-system permissions unless allowed.
+
+### Flutter / React Native
+
+Do not change native platform folders, permissions, signing, navigation architecture, state management, platform channels/native modules, or release config unless allowed.
+
+## 9. Validation Rule
+
+Use validation commands from:
+
+1. User task.
+2. Project rules.
+3. Relevant indexes.
+4. Package/build configs.
+
+Do not invent commands if project commands are available.
+
+Do not claim validation passed unless it actually passed.
+
+If validation cannot run, report exact command and reason.
+
+## 10. Incremental Index Update After Task
+
+After code changes, update only relevant indexes based on modified files.
+
+Always update `INDEX_CHANGELOG.md` if any index changes.
+
+Do not perform a full re-index unless explicitly requested.
+
+## 11. Stop Conditions
+
+Stop and report if:
+
+1. Required indexes are missing and bootstrap indexing was not allowed.
+2. Indexes are severely stale.
+3. Task requires modifying forbidden files.
+4. Task requires new dependencies not allowed.
+5. Task requires architecture changes not allowed.
+6. Task requires API/database/auth/security/signing/permission/CI/deployment changes not allowed.
+7. Validation requires weakening checks.
+8. Existing tests must be deleted or bypassed.
+9. External skill guidance conflicts with project rules.
+10. Platform identity/signing/security files must change without explicit permission.
+11. The implementation would require a large unrequested refactor.
+
+## 12. Fixed Completion Summary Format
+
+After completing the task, output the completion summary in this exact structure as much as possible.
+
+If a field does not apply, write `不适用`.
+If a value cannot be obtained, write `无法获取` and explain why.
+Do not omit validation failures, warnings, skipped commands, uncommitted files, or known risks.
+
+```text
+已完成【当前任务 / 当前阶段】，未进入【禁止进入的后续阶段 / 下一阶段】。
+
+主要输出：
+
+- 【主要文件或目录 1】
+- 【主要文件或目录 2】
+
+实现内容：
+
+- 【实现点 1】
+- 【实现点 2】
+- 【实现点 3】
+
+索引更新：
+
+- 新增：【索引文件列表 / 无】
+- 更新：【索引文件列表 / 无】
+- 未更新原因：【如无索引变更，说明原因】
+
+验证已通过：
+
+- 【验证命令 1】
+- 【验证命令 2】
+- 【验证命令 3】
+
+验证未通过 / 未执行：
+
+- 【命令】：【原因】
+- 如全部通过，写“无”。
+
+回归验证已通过：
+
+- 【回归验证 1】
+- 【回归验证 2】
+- 如不适用，写“不适用”。
+
+高风险影响检查：
+
+- 新增依赖：【否 / 是，说明】
+- API contract 修改：【否 / 是，说明】
+- 数据库 schema / migration 修改：【否 / 是，说明】
+- 鉴权 / 权限 / 安全修改：【否 / 是，说明】
+- CI / 部署 / 生产配置修改：【否 / 是，说明】
+- 平台签名 / 证书 / 权限 / Bundle ID / applicationId / appid 修改：【否 / 是，说明】
+
+说明：
+
+- 【已知 warning / 非阻塞问题】
+- 【未做事项】
+- 【需要人工复核事项】
+- 【其他重要说明】
+
+Git 状态：
+
+- 当前分支：【branch / 无法获取】
+- 当前 HEAD：【commit / 无法获取】
+- git status：【clean / dirty / not a git repo / 无法获取】
+- commit：【hash / 未提交 / 不适用】
+- push：【已推送 / 未推送 / 不适用】
+
+是否建议进入下一步：
+
+- 【是 / 否】
+- 原因：【原因】
+```
+
+## 13. Completion Summary Rules
+
+The final summary is mandatory.
+
+Do not replace it with a casual paragraph.
+
+Do not only say "done".
+
+If the task has a stage boundary, explicitly state:
+
+```text
+已完成【当前阶段】，未进入【下一阶段】。
+```
+
+If the user asked not to enter a later stage, explicitly confirm that the later stage was not entered.
+
+If validation commands were not run, clearly list them under `验证未通过 / 未执行`.
+
+If the repository is not a Git repository, explicitly state:
+
+```text
+当前目录不是 Git 仓库，所以无法输出 git diff/status。
+```
+
+Stop after the summary.

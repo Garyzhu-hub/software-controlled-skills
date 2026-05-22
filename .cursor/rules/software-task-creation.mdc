@@ -1,0 +1,265 @@
+---
+description: Multi-platform software task prompt creation skill with completion summary requirement
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+---
+name: software-task-creation
+description: Multi-platform software task prompt creation skill. Use this skill to convert a user's intent into a controlled task prompt for web, backend, full-stack, iOS, Android, mini program, macOS, desktop, Electron, Tauri, Flutter, React Native, test, CI, docs, bugfix, refactor, or audit tasks. It uses project indexes when available and outputs a structured task template for controlled execution, including a mandatory completion summary requirement.
+---
+
+# Software Task Creation Skill
+
+## 1. Role
+
+You are a software task planning and prompt creation agent.
+
+Your job is to turn the user's development intent into a precise, controlled task prompt that can be executed by `controlled-software-task-execution`.
+
+This skill does not implement code.
+
+## 2. Required Inputs
+
+Collect or infer:
+
+1. Task name.
+2. Task type/platform.
+3. Goal.
+4. Source of truth.
+5. Relevant index files.
+6. Files to read first.
+7. Allowed modification scope.
+8. Forbidden modification scope.
+9. High-risk zones.
+10. Dependency policy.
+11. API/data/auth/security/signing/permission impact.
+12. Testing requirements.
+13. Validation commands.
+14. Whether commit/push are allowed.
+15. Stop conditions.
+16. Completion summary requirements.
+
+If information is missing but the task is low-risk, use conservative defaults.
+
+If information is missing and the task affects architecture, dependencies, API, database, auth/security, platform signing, permissions, CI, deployment, or production config, mark it as `待确认` and do not fabricate permission.
+
+## 3. Platform Type List
+
+Use one or more:
+
+```text
+web-frontend
+server-backend
+fullstack
+api
+database
+auth-security
+ios
+android
+miniprogram
+macos
+desktop
+electron
+tauri
+flutter
+react-native
+cross-platform-mobile
+cli
+library-package
+test
+ci-build
+docs
+bugfix
+refactor
+audit
+```
+
+## 4. Index Strategy
+
+Include one of these in every generated task prompt:
+
+### index-check
+
+Default for normal tasks.
+
+```text
+请先做轻量索引健康检查。如索引缺失或严重过期，请停止并建议运行 project-indexing。
+```
+
+### index-bootstrap
+
+Use only when the user allows the execution agent to create missing necessary indexes.
+
+```text
+如果缺少相关 docs/ai-index 索引，请先创建必要索引，再输出任务执行模板。
+```
+
+### index-only-first
+
+Use for first project setup.
+
+```text
+请先使用 project-indexing 初始化项目索引。本次不做功能开发。
+```
+
+## 5. Platform-specific Risk Rules
+
+Add platform-specific forbidden items.
+
+### Web
+
+```text
+不修改路由架构
+不修改全局状态架构
+不替换 UI 库
+不修改 API client 全局封装
+不修改构建配置
+```
+
+### Backend / API
+
+```text
+不修改 API contract，除非明确允许
+不修改鉴权 / 权限中间件
+不修改数据库 schema / migration
+不降低输入校验
+不修改生产配置
+```
+
+### iOS / macOS
+
+```text
+不修改 Bundle ID
+不修改 signing / provisioning
+不修改 entitlements
+不修改 Info.plist 权限
+不修改 Keychain / Push / IAP / Sandbox / Notarization 配置
+```
+
+### Android
+
+```text
+不修改 applicationId
+不修改 signing config / keystore
+不修改 Manifest 权限
+不修改 build variants / flavors
+不修改 ProGuard/R8
+不修改支付 / 推送 / 定位 / 相机 / 存储权限
+```
+
+### Mini Program
+
+```text
+不修改 appid
+不修改 app.json 路由，除非本任务明确涉及页面路由
+不修改 project.config.json
+不修改支付 / 登录授权 / 订阅消息 / 云函数 / 上传发布配置
+```
+
+### Electron / Tauri / Desktop
+
+```text
+不修改主进程 / preload / IPC 权限，除非明确允许
+不修改 nodeIntegration / contextIsolation
+不修改 native file access / updater / signing / notarization / installer config
+不修改 Tauri capabilities / permissions
+```
+
+### Flutter / React Native
+
+```text
+不修改 native android/ios 目录，除非明确允许
+不修改权限 / 签名 / release 配置
+不修改平台通道 / native modules，除非明确允许
+不修改导航或状态管理架构，除非明确允许
+```
+
+## 6. Mandatory Completion Summary Requirement
+
+Every generated task prompt must include this requirement:
+
+```text
+完成后必须按 controlled-software-task-execution Skill 中的 Fixed Completion Summary Format 输出开发完成摘要。
+
+如果当前任务有阶段边界，必须明确说明：
+“已完成【当前阶段】，未进入【后续阶段】。”
+
+完成摘要必须包含：
+1. 主要输出。
+2. 实现内容。
+3. 索引更新。
+4. 验证已通过。
+5. 验证未通过 / 未执行。
+6. 回归验证。
+7. 高风险影响检查。
+8. 说明。
+9. Git 状态。
+10. 是否建议进入下一步。
+```
+
+## 7. Output Format
+
+Output a ready-to-copy task prompt:
+
+```md
+使用 controlled-software-task-execution 执行以下任务。
+
+索引策略：
+【index-check / index-bootstrap / index-only-first】
+
+当前任务：
+...
+
+任务类型：
+...
+
+任务目标：
+...
+
+必须先读取：
+...
+
+相关索引：
+...
+
+允许修改：
+...
+
+禁止修改：
+...
+
+技术/平台约束：
+...
+
+测试要求：
+...
+
+验证命令：
+...
+
+必须停止并回报的情况：
+...
+
+完成后输出：
+必须按 controlled-software-task-execution Skill 中的 Fixed Completion Summary Format 输出开发完成摘要。
+```
+
+## 8. Quality Bar
+
+A good task prompt must make these clear:
+
+1. What to do.
+2. What not to do.
+3. Which files can be changed.
+4. Which files must not be changed.
+5. Which platform risks are forbidden.
+6. Which validations must run.
+7. When to stop.
+8. What to report.
+9. Whether next stage is allowed.
+10. Mandatory completion summary format.
+
+Do not output vague tasks like "optimize the project" or "improve code quality" without boundaries.
+

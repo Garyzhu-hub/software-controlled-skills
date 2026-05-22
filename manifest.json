@@ -1,0 +1,16 @@
+{
+  "name": "software-controlled-skills-multiplatform-kit",
+  "version": "2.1.0",
+  "description": "Split multi-platform software development skills with fixed completion summary format.",
+  "skills": [
+    "project-indexing",
+    "software-task-creation",
+    "controlled-software-task-execution"
+  ],
+  "updates_from_v2_0": [
+    "Added fixed completion summary format to controlled-software-task-execution.",
+    "Added mandatory completion summary requirement to software-task-creation.",
+    "Added index completion summary format to project-indexing.",
+    "Updated task templates with stage boundary and summary requirements."
+  ]
+}

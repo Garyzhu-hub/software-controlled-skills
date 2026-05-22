@@ -1,0 +1,12 @@
+.DS_Store
+
+# Local archive and extracted staging directory
+*.zip
+software-controlled-skills-multiplatform-kit-v2_1/
+
+# Editor and system files
+.idea/
+.vscode/
+*.swp
+*.tmp
+
