@@ -4,7 +4,7 @@
 
 这是一个面向多平台软件开发的受控 Skill 包，用于帮助 AI Agent 在开发过程中保持任务边界清晰、项目索引可追踪、阶段结果可审计。
 
-当前版本为 `2.2.0`，主要适配 Codex 风格 Agent、Claude Code、Trae 和 Cursor。
+当前版本为 `2.3.0`，主要适配 Codex 风格 Agent、Claude Code、Trae 和 Cursor。
 
 ![软件开发智能控制三技能使用说明](assets/software-controlled-skills-guide.png)
 
@@ -31,13 +31,21 @@ CodeGraph 和其他 code graph MCP tools 只是可选结构化代码智能来源
 
 ### `software-task-creation`
 
-用于把用户的原始需求整理成可以交给 Agent 执行的任务 prompt。它会把目标、范围、限制、验收标准和完成摘要要求写清楚，降低任务执行时跑偏的概率。
+用于把用户的原始需求整理成可以交给 Agent 执行的任务 prompt。v2.3.0 将它增强为 index-aware task creation，会把目标、范围、限制、AI index files to read、Pre-edit Impact Check、affected tests mapping、验证计划、索引维护预期和完成摘要要求写清楚，降低任务执行时跑偏的概率。
 
 ### `controlled-software-task-execution`
 
-用于执行受控的软件开发任务。执行前会进行轻量索引检查，执行后会按要求更新索引，并输出固定格式的开发完成摘要。
+用于执行受控的软件开发任务。v2.3.0 将它增强为 index-aware controlled execution：执行前解析任务 prompt、读取索引并判断边界，修改前做影响面检查，验证时参考 TEST_INDEX.md / CODE_INTELLIGENCE_INDEX.md / package scripts / changed files，执行后判断 docs/ai-index 是否需要 no-index-update-needed、incremental-index-update 或 full-index-refresh-required，并输出固定格式的开发完成摘要。
 
 ## 推荐工作流
+
+正确链路：
+
+```text
+project-indexing -> software-task-creation -> controlled-software-task-execution
+```
+
+Workflow: project-indexing -> software-task-creation -> controlled-software-task-execution.
 
 第一次接入一个项目时，先让 Agent 使用 `project-indexing` 初始化索引：
 
@@ -59,6 +67,9 @@ CodeGraph 和其他 code graph MCP tools 只是可选结构化代码智能来源
 ...
 限制：
 ...
+
+要求：
+请生成索引感知型任务 prompt，要求执行 Agent 读取项目权威文档和已有 docs/ai-index，明确 allowed / forbidden 范围、Pre-edit Impact Check、Validation plan 和 Post-execution index maintenance。
 ```
 
 执行具体开发任务时，使用 `controlled-software-task-execution`：
@@ -72,6 +83,7 @@ CodeGraph 和其他 code graph MCP tools 只是可选结构化代码智能来源
 ...
 
 完成后必须按 Fixed Completion Summary Format 输出开发完成摘要。
+完成后必须判断是否需要更新 docs/ai-index；如果需要 project-indexing refresh / rebuild 且未完成，不应建议进入下一步。
 ```
 
 ## 安装方式
@@ -114,6 +126,15 @@ cp .trae/rules/project_rules.md /path/to/project/.trae/rules/project_rules.md
 - 增强 `TEST_INDEX_TEMPLATE.md`：新增 source area 到 affected tests 的映射。
 - 新增可选 `CODE_INTELLIGENCE_INDEX_TEMPLATE.md`。
 - 普通项目没有 CodeGraph 时，仍然按现有 `docs/ai-index/` 流程完成索引。
+
+## v2.3.0 — Index-aware Task Creation & Controlled Execution
+
+- 不重构 `project-indexing`，保留 v2.2.0 graph-aware indexing。
+- 增强 `software-task-creation`：生成任务 prompt 时要求读取项目权威文档、`PROJECT_INDEX.md`、`TEST_INDEX.md`、`CODE_INTELLIGENCE_INDEX.md`、`INDEX_CHANGELOG.md` 和平台索引，如存在。
+- 增强 `controlled-software-task-execution`：执行前做 Pre-execution Index Check，修改前做 impact check，验证时按 TEST_INDEX.md、affected tests mapping、package scripts、changed files 和 README / docs 选择。
+- 新增任务后索引维护判断：`no-index-update-needed`、`incremental-index-update`、`full-index-refresh-required`。
+- 如果索引需要刷新但未完成，“是否建议进入下一步”应为“否”，除非用户明确要求跳过索引刷新。
+- CodeGraph optional, not required；不新增依赖、不修改 package / CI。
 
 ## v2.1 更新
 

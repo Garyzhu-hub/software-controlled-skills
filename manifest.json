@@ -1,12 +1,27 @@
 {
   "name": "software-controlled-skills-multiplatform-kit",
-  "version": "2.2.0",
-  "title": "v2.2.0 — Graph-aware Project Indexing",
-  "description": "Split multi-platform software development skills with graph-aware project indexing and fixed completion summary format.",
+  "version": "2.3.0",
+  "title": "v2.3.0 — Index-aware Task Creation & Controlled Execution",
+  "description": "Split multi-platform software development skills with graph-aware project indexing, index-aware task creation and controlled execution, and fixed completion summary format.",
   "skills": [
     "project-indexing",
     "software-task-creation",
     "controlled-software-task-execution"
+  ],
+  "workflow": [
+    "project-indexing",
+    "software-task-creation",
+    "controlled-software-task-execution"
+  ],
+  "workflowText": "project-indexing -> software-task-creation -> controlled-software-task-execution",
+  "updates_from_v2_2": [
+    "Enhanced software-task-creation to generate index-aware task prompts without replacing the existing prompt structure.",
+    "Enhanced controlled-software-task-execution with Pre-execution Index Check, Pre-edit Impact Check, validation selection, and Post-execution Index Maintenance.",
+    "Added index maintenance outcomes: no-index-update-needed, incremental-index-update, and full-index-refresh-required.",
+    "Added index-aware completion summary sections while preserving the existing Fixed Completion Summary Format.",
+    "Updated task templates and examples with AI index files to read, affected tests mapping, validation plan, stop conditions, allowed files, forbidden files, and index maintenance expectations.",
+    "Kept project-indexing intact; CodeGraph optional, not required.",
+    "Added no dependency / CI / package changes."
   ],
   "updates_from_v2_1": [
     "Upgraded only project-indexing to Graph-aware Project Indexing.",

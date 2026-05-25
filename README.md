@@ -4,7 +4,7 @@
 
 Multi-platform software development skill kit for controlled task creation, project indexing, and task execution.
 
-This repository contains the v2.2.0 skill package for Codex-style agents, Claude Code, Trae, and Cursor. The package focuses on keeping software work auditable by requiring project indexes, bounded task prompts, and fixed completion summaries after execution.
+This repository contains the v2.3.0 skill package for Codex-style agents, Claude Code, Trae, and Cursor. The package focuses on keeping software work auditable by requiring project indexes, bounded task prompts, and fixed completion summaries after execution.
 
 ![Software Controlled Skills guide](assets/software-controlled-skills-guide.png)
 
@@ -26,8 +26,8 @@ This repository contains the v2.2.0 skill package for Codex-style agents, Claude
 The package includes three coordinated skills:
 
 - `project-indexing`: initialize, rebuild, and audit graph-aware AI-readable project indexes.
-- `software-task-creation`: convert rough requirements into executable task prompts.
-- `controlled-software-task-execution`: execute bounded software tasks, update indexes, and report fixed completion summaries.
+- `software-task-creation`: convert rough requirements into index-aware executable task prompts.
+- `controlled-software-task-execution`: execute bounded software tasks with index checks, impact checks, validation selection, post-execution index maintenance checks, and fixed completion summaries.
 
 ## Quick Start
 
@@ -51,9 +51,33 @@ CodeGraph is not a dependency of this package. The skill does not install CodeGr
 
 When structured code intelligence is unavailable, incomplete, stale, or unable to answer an indexing question, `project-indexing` falls back to the normal `docs/ai-index/` repository scan flow and records the fallback reason.
 
+## Index-aware Workflow
+
+v2.3.0 upgrades Skill 2 and Skill 3 without restructuring Skill 1:
+
+```text
+project-indexing -> software-task-creation -> controlled-software-task-execution
+```
+
+Workflow: project-indexing -> software-task-creation -> controlled-software-task-execution.
+
+Use `project-indexing` first to establish, refresh, or audit `docs/ai-index`. Then use `software-task-creation` to turn user intent into an index-aware task prompt. Finally use `controlled-software-task-execution` to execute that prompt, read indexes before broad source scans when available, check impact before edits, select validation from test mappings and project scripts, and decide after execution whether `docs/ai-index` needs no update, an incremental update, or a `project-indexing refresh` / `rebuild`.
+
+If indexes need refresh but were not refreshed, the completion summary should not recommend entering the next step unless the user explicitly chooses to skip the index refresh. CodeGraph optional, not required; no dependency, package, or CI changes are introduced by v2.3.0.
+
 ## Version
 
-Current package version: `2.2.0`.
+Current package version: `2.3.0`.
+
+### v2.3.0 — Index-aware Task Creation & Controlled Execution
+
+- Keeps `project-indexing` v2.2 graph-aware rules intact.
+- Enhances `software-task-creation` so generated prompts require AI index reading, task boundaries, Pre-edit Impact Check, affected tests mapping, validation plans, and post-execution index maintenance.
+- Enhances `controlled-software-task-execution` with Pre-execution Index Check, authority priority, impact check, validation selection, and Post-execution Index Maintenance.
+- Adds the index maintenance outcomes `no-index-update-needed`, `incremental-index-update`, and `full-index-refresh-required`.
+- Preserves the existing Fixed Completion Summary Format and appends index-aware sections.
+- Keeps CodeGraph optional, not required.
+- Adds no dependency / CI / package changes.
 
 ### v2.2.0 — Graph-aware Project Indexing
 

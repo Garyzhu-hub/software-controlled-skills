@@ -3,7 +3,7 @@ name: controlled-software-task-execution
 description: Controlled multi-platform software task execution skill. Use this skill for frontend, backend, full-stack, iOS, Android, mini program, macOS, desktop, Electron, Tauri, Flutter, React Native, test, CI, docs, refactor, and bugfix tasks. It performs lightweight index health checks, reads task-relevant indexes, generates a task execution template, executes within boundaries, validates, incrementally updates indexes, and outputs a fixed completion summary.
 ---
 
-# Controlled Software Task Execution Skill
+# Controlled Software Task Execution Skill v2.3.0 — Index-aware Controlled Execution
 
 ## 1. Role
 
@@ -13,26 +13,75 @@ Your job is to complete the requested software task with minimal, safe, reviewab
 
 Technology-specific skills may be used as secondary guidance, but they must not override project rules, index guidance, task boundaries, validation commands, stop conditions, or completion summary requirements.
 
+This is Skill 3 in the required workflow:
+
+```text
+project-indexing -> software-task-creation -> controlled-software-task-execution
+```
+
 ## 2. Required Workflow
 
 For every task:
 
-1. Classify the task type and platform.
-2. Check `docs/ai-index/PROJECT_INDEX.md`.
-3. Read only task-relevant index files.
-4. Perform a lightweight index health check.
-5. If indexes are missing:
+1. Parse the task prompt produced by `software-task-creation` and confirm the required boundaries.
+2. Classify the task type and platform.
+3. Check `docs/ai-index/PROJECT_INDEX.md`.
+4. Read only task-relevant index files.
+5. Perform a lightweight index health check.
+6. Perform a pre-edit impact check before modifying files.
+7. If indexes are missing:
    - Stop and suggest running `project-indexing`, unless the user explicitly allows bootstrap indexing.
-6. If indexes are lightly stale, update only relevant indexes.
-7. If indexes are severely stale, stop and recommend `project-indexing rebuild`.
-8. Generate the current task execution template.
-9. Execute only within allowed scope.
-10. Run validation commands.
-11. Incrementally update related indexes and `INDEX_CHANGELOG.md` based on modified files.
-12. Output the fixed completion summary.
-13. Stop.
+8. If indexes are lightly stale, update only relevant indexes.
+9. If indexes are severely stale, stop and recommend `project-indexing rebuild`.
+10. Generate the current task execution template.
+11. Execute only within allowed scope.
+12. Select and run validation commands from index-aware sources.
+13. Perform the post-execution index maintenance check.
+14. Incrementally update related indexes and `INDEX_CHANGELOG.md` based on modified files when the maintenance result allows it.
+15. Output the fixed completion summary with the v2.3.0 index-aware sections appended.
+16. Stop.
 
 Do not run a full repository re-index for every task.
+
+## 2.1 Pre-execution Task Prompt Check
+
+Before editing, parse the task prompt and confirm:
+
+1. Task goal.
+2. Allowed scope.
+3. Forbidden scope.
+4. Current stage boundary.
+5. Forbidden next stage.
+6. Stop conditions.
+7. Required context reading.
+8. Index usage requirements.
+9. Validation requirements.
+10. Completion summary requirements.
+
+If the task prompt lacks any critical boundary, stop and ask for a corrected task prompt. Do not infer broader scope.
+
+Critical boundaries are:
+
+```text
+task goal
+allowed scope
+forbidden scope
+stop conditions
+validation requirements
+completion summary requirements
+```
+
+## 2.2 Authority Priority
+
+When sources conflict, use this priority:
+
+1. User task and explicit instructions.
+2. Project authority documents.
+3. AI index.
+4. Optional structured code intelligence / CodeGraph.
+5. Repository scan fallback.
+
+Project authority documents outrank code graph / structured index data. User-provided task boundaries outrank agent inference. If uncertain, stop or mark the uncertainty; do not fabricate. Do not use CodeGraph or a code graph result to bypass forbidden task scope.
 
 ## 3. Task Type and Platform Detection
 
@@ -112,6 +161,56 @@ Before implementation, check:
 If the mismatch is small, update relevant indexes.
 
 If the mismatch suggests large structural drift, stop and recommend `project-indexing rebuild`.
+
+## 5.1 Pre-execution Index Check
+
+Before source edits, check these AI index files:
+
+```text
+docs/ai-index/PROJECT_INDEX.md
+docs/ai-index/TEST_INDEX.md
+docs/ai-index/CODE_INTELLIGENCE_INDEX.md
+docs/ai-index/INDEX_CHANGELOG.md
+```
+
+If an index exists, read it before reading source files. If an index is missing, stale, incomplete, or conflicting, record:
+
+1. Missing index files.
+2. Stale index files.
+3. Incomplete index sections.
+4. Fallback reason.
+5. Uncertainty.
+
+If an index conflicts with actual source files, do not ignore the conflict. Record it, rely on project authority documents and actual files for conservative judgment, and mark `full-index-refresh-required` when safe incremental maintenance is not possible.
+
+## 5.2 Pre-edit Impact Check
+
+Before modifying any of these, perform an impact check:
+
+1. Shared function.
+2. Public API.
+3. Component.
+4. Data model.
+5. Route handler.
+6. Build config.
+7. Exported module.
+8. Security / auth / permission logic.
+9. Database schema / migration.
+10. Package / dependency / CI config.
+11. Platform config.
+12. Docs / tasks / examples that affect future task creation or execution.
+13. `docs/ai-index` content that affects future indexing.
+
+Identify:
+
+1. Affected files.
+2. Affected modules.
+3. Affected entry points.
+4. Affected tests.
+5. High-risk areas.
+6. Uncertainty.
+
+If the impact exceeds task boundaries, stop, report the out-of-scope impact, and do not expand scope.
 
 ## 6. Default Conservative Boundaries
 
@@ -198,12 +297,24 @@ Use validation commands from:
 2. Project rules.
 3. Relevant indexes.
 4. Package/build configs.
+5. `TEST_INDEX.md`.
+6. `CODE_INTELLIGENCE_INDEX.md` affected tests mapping.
+7. Changed files.
+8. Source area -> test mapping.
+9. README / docs validation instructions.
 
 Do not invent commands if project commands are available.
 
 Do not claim validation passed unless it actually passed.
 
 If validation cannot run, report exact command and reason.
+
+If no test mapping can be identified, report:
+
+1. Why it could not be identified.
+2. Substitute validation that was run.
+3. Validation skipped and the reason.
+4. Manual review items.
 
 ## 10. Incremental Index Update After Task
 
@@ -212,6 +323,68 @@ After code changes, update only relevant indexes based on modified files.
 Always update `INDEX_CHANGELOG.md` if any index changes.
 
 Do not perform a full re-index unless explicitly requested.
+
+## 10.1 Post-execution Index Maintenance Check
+
+After completing task changes and validation, but before the final summary, decide whether this task affects `docs/ai-index`.
+
+Check whether the task changed or invalidated:
+
+1. New / deleted / renamed files.
+2. Directory structure.
+3. Entry files.
+4. Public API / exported modules.
+5. Shared functions / shared components.
+6. Route handler / route graph.
+7. Data model / schema / migration.
+8. Dependency / package script / build config.
+9. Test files / test command / validation workflow.
+10. `README`, `README.zh-CN`, `USAGE`, `AGENTS`, `CLAUDE`, `docs`, `tasks`, or `examples`.
+11. Content recorded in `PROJECT_INDEX.md`, `TEST_INDEX.md`, or `CODE_INTELLIGENCE_INDEX.md`.
+12. Critical flows / high-risk areas / affected tests mapping.
+13. Skill 2 / Skill 3 rules.
+14. Multi-platform distribution files.
+15. Manifest version or description.
+
+Choose exactly one result:
+
+```text
+no-index-update-needed
+incremental-index-update
+full-index-refresh-required
+```
+
+### no-index-update-needed
+
+Use when the change does not affect project structure, entry points, module relationships, test mapping, validation commands, authority documents, or index content.
+
+Requirements:
+
+1. Explain the no-update reason in the completion summary.
+2. Do not write only “not needed”; include the judgment basis.
+
+### incremental-index-update
+
+Use when the affected scope is clear, related `docs/ai-index` files can be safely updated, and a full rebuild is not required.
+
+Requirements:
+
+1. Update relevant index files, for example `PROJECT_INDEX.md`, `TEST_INDEX.md`, `CODE_INTELLIGENCE_INDEX.md`, and `INDEX_CHANGELOG.md`.
+2. Update `INDEX_CHANGELOG.md` when it exists.
+3. If `INDEX_CHANGELOG.md` does not exist, explain why it was not updated.
+4. In the completion summary, list updated index files, non-updated index files, update reason, and remaining uncertainty.
+
+### full-index-refresh-required
+
+Use when the affected scope is broad, multiple subsystems changed, architecture or module boundaries changed, tests changed broadly, directory structure changed, indexes are missing/stale/conflicting, or safe index completeness cannot be judged.
+
+Requirements:
+
+1. Do not pretend indexes were updated.
+2. Mark that `project-indexing refresh` or `project-indexing rebuild` is required.
+3. The code task may be complete, but index state must be marked incomplete or pending refresh.
+4. Until the index refresh happens, “是否建议进入下一步” must be “否” unless the user explicitly asks to skip index refresh.
+5. Explain why safe incremental index update was not possible.
 
 ## 11. Stop Conditions
 
@@ -256,6 +429,52 @@ Do not omit validation failures, warnings, skipped commands, uncommitted files, 
 - 新增：【索引文件列表 / 无】
 - 更新：【索引文件列表 / 无】
 - 未更新原因：【如无索引变更，说明原因】
+
+索引使用情况：
+
+- PROJECT_INDEX.md：【已使用 / 未使用 / 不存在】
+- TEST_INDEX.md：【已使用 / 未使用 / 不存在】
+- CODE_INTELLIGENCE_INDEX.md：【已使用 / 未使用 / 不存在】
+- INDEX_CHANGELOG.md：【已使用 / 未使用 / 不存在】
+- 是否回退到源码扫描：【是 / 否】
+- 回退原因：【原因 / 无】
+- 不确定项：【不确定项 / 无】
+
+任务边界：
+
+- 允许范围：【范围】
+- 禁止范围：【范围】
+- 是否进入后续阶段：【是 / 否】
+- 是否触发停止条件：【是 / 否】
+- 处理方式：【处理方式】
+
+影响面检查：
+
+- affected files：【文件列表 / 无】
+- affected modules：【模块列表 / 无】
+- affected entry points：【入口列表 / 无】
+- affected tests：【测试列表 / 无】
+- high-risk areas：【高风险区域 / 无】
+- 是否超出任务边界：【是 / 否】
+- 处理方式：【处理方式】
+
+验证选择依据：
+
+- 测试映射来源：【TEST_INDEX.md / CODE_INTELLIGENCE_INDEX.md / package scripts / changed files / source area mapping / README/docs / 其他】
+- 执行的验证：【命令列表 / 无】
+- 未执行的验证：【命令列表及原因 / 无】
+- 人工复核建议：【建议 / 无】
+
+索引维护：
+
+- 是否需要更新索引：【是 / 否 / 不确定】
+- 判断结果：【no-index-update-needed / incremental-index-update / full-index-refresh-required】
+- 判断依据：【依据】
+- 已更新索引文件：【文件列表 / 无】
+- 未更新索引文件：【文件列表 / 无】
+- INDEX_CHANGELOG.md 是否已更新：【是 / 否 / 不存在】
+- 是否需要执行 project-indexing refresh / rebuild：【是 / 否】
+- 是否因索引未更新而禁止进入下一步：【是 / 否】
 
 验证已通过：
 

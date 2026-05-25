@@ -1,22 +1,22 @@
-# Trae Rules: Multi-platform Controlled Software Skills v2.2.0
+# Trae Rules: Multi-platform Controlled Software Skills v2.3.0
 
 Use these rules for software projects across Web, backend, iOS, Android, mini program, macOS, desktop, Electron, Tauri, Flutter, and React Native.
 
 ## Skills
 
 1. `project-indexing`: initialize, rebuild, refresh, or audit graph-aware `docs/ai-index/` indexes.
-2. `software-task-creation`: convert user intent into a controlled task prompt.
-3. `controlled-software-task-execution`: execute tasks with lightweight index checks, post-task incremental index updates, and fixed completion summaries.
+2. `software-task-creation`: convert user intent into an index-aware controlled task prompt.
+3. `controlled-software-task-execution`: execute tasks with pre-execution index checks, impact checks, validation selection, post-task index maintenance checks, and fixed completion summaries.
 
 ## Default workflow
 
-1. First project setup: run project-indexing.
-2. During project-indexing: read authority documents first, then existing AI indexes, then optional structured code intelligence, then repository files, then fallback raw search.
-3. Before coding: read relevant indexes.
-4. For each task: generate a task execution template.
-5. Execute only within allowed scope.
-6. Validate.
-7. Incrementally update indexes.
+1. First run project-indexing to establish, refresh, or audit `docs/ai-index`.
+2. Then run software-task-creation to convert user intent into an index-aware task prompt.
+3. Finally run controlled-software-task-execution to execute that prompt.
+4. During execution: read relevant indexes before source files when indexes exist.
+5. Perform a pre-edit impact check before modifying files.
+6. Select validation from `TEST_INDEX.md`, `CODE_INTELLIGENCE_INDEX.md`, package scripts, changed files, and docs.
+7. After execution, decide whether `docs/ai-index` needs no update, incremental update, or project-indexing refresh / rebuild.
 8. Output fixed completion summary.
 9. Stop.
 
@@ -31,6 +31,26 @@ Structured code intelligence is optional. Do not install CodeGraph, initialize `
 If structured code intelligence is available and fresh, use it to reduce broad grep/read/glob during indexing. If it is unavailable, incomplete, stale, or unable to answer the indexing question, fall back to normal repository scanning and record the fallback reason.
 
 Project-indexing completion summaries must include structured index capability fields: CodeGraph / code graph availability, `.codegraph/`, MCP graph tools, symbol / AST / call graph, dependency graph, test impact graph, index strategy, whether broad grep/read was avoided, and fallback reason.
+
+## Index-aware software-task-creation rules
+
+Generated task prompts must require execution agents to use project authority documents and existing AI indexes before broad source scans. Relevant AI indexes include `PROJECT_INDEX.md`, `TEST_INDEX.md`, `CODE_INTELLIGENCE_INDEX.md`, `INDEX_CHANGELOG.md`, and platform indexes when present.
+
+Task prompts must state allowed files / areas, forbidden files / areas, current stage boundary, forbidden next stage, stop conditions, whether `docs/ai-index` may be modified, whether new files / config / tests / README / USAGE / tasks / examples may be modified, and completion summary requirements.
+
+Task prompts must require a Pre-edit Impact Check covering affected files, modules, entry points, tests, high-risk areas, uncertainty, and whether the impact exceeds the task boundary. Out-of-bound impact must stop execution.
+
+Task prompts must require post-execution index maintenance with exactly one result: `no-index-update-needed`, `incremental-index-update`, or `full-index-refresh-required`.
+
+## Index-aware controlled-software-task-execution rules
+
+Before editing, controlled execution must parse the task prompt and verify task goal, allowed scope, forbidden scope, stop conditions, validation requirements, and completion summary requirements. Missing critical boundaries require stopping.
+
+Before source reads and edits, check `PROJECT_INDEX.md`, `TEST_INDEX.md`, `CODE_INTELLIGENCE_INDEX.md`, and `INDEX_CHANGELOG.md` when present. Missing, stale, incomplete, or conflicting indexes require fallback reason and uncertainty notes.
+
+Authority priority is: user task, project authority documents, AI index, optional structured code intelligence / CodeGraph, repository scan fallback. CodeGraph optional, not required, and never replaces authority documents.
+
+After validation, controlled execution must decide `no-index-update-needed`, `incremental-index-update`, or `full-index-refresh-required`. If refresh is required but not done, do not recommend entering the next step unless the user explicitly allows skipping index refresh.
 
 ## High-risk changes require explicit permission
 

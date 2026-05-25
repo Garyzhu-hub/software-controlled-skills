@@ -3,13 +3,19 @@ name: software-task-creation
 description: Multi-platform software task prompt creation skill. Use this skill to convert a user's intent into a controlled task prompt for web, backend, full-stack, iOS, Android, mini program, macOS, desktop, Electron, Tauri, Flutter, React Native, test, CI, docs, bugfix, refactor, or audit tasks. It uses project indexes when available and outputs a structured task template for controlled execution, including a mandatory completion summary requirement.
 ---
 
-# Software Task Creation Skill
+# Software Task Creation Skill v2.3.0 — Index-aware Task Creation
 
 ## 1. Role
 
 You are a software task planning and prompt creation agent.
 
 Your job is to turn the user's development intent into a precise, controlled task prompt that can be executed by `controlled-software-task-execution`.
+
+This is Skill 2 in the required workflow:
+
+```text
+project-indexing -> software-task-creation -> controlled-software-task-execution
+```
 
 This skill does not implement code.
 
@@ -33,6 +39,11 @@ Collect or infer:
 14. Whether commit/push are allowed.
 15. Stop conditions.
 16. Completion summary requirements.
+17. AI index files the execution agent must read or check.
+18. Whether `docs/ai-index/` may be updated by the execution task.
+19. Expected affected files, modules, entry points, tests, and high-risk areas.
+20. Validation selection sources.
+21. Post-execution index maintenance expectation.
 
 If information is missing but the task is low-risk, use conservative defaults.
 
@@ -96,6 +107,113 @@ Use for first project setup.
 ```text
 请先使用 project-indexing 初始化项目索引。本次不做功能开发。
 ```
+
+## 4.1 Index-aware Task Creation Requirements
+
+Generated task prompts must be index-aware while preserving the existing prompt structure.
+
+### Required context reading
+
+Require the execution agent to read or check these sources before editing.
+
+Project authority documents, when present:
+
+```text
+AGENTS.md
+CLAUDE.md
+README.md
+README.zh-CN.md
+USAGE.md
+docs/
+tasks/
+other project documents explicitly marked as source of truth
+```
+
+Existing AI index files, when present:
+
+```text
+docs/ai-index/PROJECT_INDEX.md
+docs/ai-index/TEST_INDEX.md
+docs/ai-index/CODE_INTELLIGENCE_INDEX.md
+docs/ai-index/INDEX_CHANGELOG.md
+platform-specific docs/ai-index files
+```
+
+Source files should be read only when indexes and authority documents are insufficient for execution. Do not instruct the execution agent to blindly scan the whole repository when enough index context exists.
+
+### Index usage requirements
+
+Generated task prompts must require the execution agent to:
+
+1. Use `PROJECT_INDEX.md` first for project structure, platforms, boundaries, key modules, and high-risk areas.
+2. Use `TEST_INDEX.md` first for validation scope and source area to test mapping.
+3. Use `CODE_INTELLIGENCE_INDEX.md`, when present, for entry points, key symbols, dependency summary, critical flows, affected tests, and high-risk areas.
+4. Use `INDEX_CHANGELOG.md`, when present, to judge index freshness and recent structural changes.
+5. Record a fallback reason when indexes are missing, stale, incomplete, or conflicting with source files.
+6. Treat project authority documents as higher priority than AI indexes, CodeGraph, code graph tools, structured indexes, or source-derived heuristics.
+7. Treat user-provided task boundaries as higher priority than agent inference.
+
+Do not let CodeGraph / code graph / structured index replace project authority documents.
+
+### Task boundary enhancement
+
+Generated task prompts must make these boundaries explicit while preserving the existing output format:
+
+1. Allowed files / areas.
+2. Forbidden files / areas.
+3. Current stage boundary.
+4. Forbidden next stage.
+5. Explicit stop conditions.
+6. Whether `docs/ai-index` may be modified.
+7. Whether new files may be added.
+8. Whether configuration files may be modified.
+9. Whether tests may be modified.
+10. Whether `README`, `USAGE`, `tasks`, or `examples` may be modified.
+
+If any of these are unknown and the task is not low-risk, mark them as `待确认`.
+
+### Pre-edit Impact Check
+
+Generated task prompts must require the execution agent to identify before editing:
+
+1. Affected files.
+2. Affected modules.
+3. Affected entry points.
+4. Affected tests.
+5. High-risk areas.
+6. Uncertainty.
+7. Whether the impact exceeds the allowed task boundary.
+
+If the impact exceeds the boundary, the generated task prompt must require the execution agent to stop and report instead of expanding scope.
+
+### Validation selection
+
+Generated task prompts must require validation selection from:
+
+1. `TEST_INDEX.md`.
+2. `CODE_INTELLIGENCE_INDEX.md` affected tests mapping.
+3. Package scripts.
+4. Changed files.
+5. Source area -> test mapping.
+6. README / docs validation instructions.
+
+If no test mapping can be identified, require the execution agent to explain why, list substitute validation, list skipped validation and reasons, and identify manual review items.
+
+### Post-execution index maintenance
+
+Generated task prompts must require `controlled-software-task-execution` to decide one of these outcomes after changes and validation:
+
+```text
+no-index-update-needed
+incremental-index-update
+full-index-refresh-required
+```
+
+Use `no-index-update-needed` only when the change does not affect project structure, entry points, module relationships, test mapping, validation commands, authority documents, or index content. The completion summary must explain the reason.
+
+Use `incremental-index-update` when the affected scope is clear and related `docs/ai-index` files can be safely updated. The execution agent must update relevant indexes and `INDEX_CHANGELOG.md` when it exists, then list updated files and reasons.
+
+Use `full-index-refresh-required` when scope is broad, indexes are missing, stale, incomplete, conflicting, or cannot be safely judged. The execution agent must not pretend indexes are updated; it must recommend `project-indexing refresh` or `project-indexing rebuild`. Until that refresh happens, “是否建议进入下一步” must be “否” unless the user explicitly asks to skip index refresh.
 
 ## 5. Platform-specific Risk Rules
 
@@ -190,6 +308,14 @@ Every generated task prompt must include this requirement:
 8. 说明。
 9. Git 状态。
 10. 是否建议进入下一步。
+
+在不删除、重排、重命名原有字段的前提下，任务 prompt 还必须要求执行 Agent 在完成摘要中追加或合并以下增量 section：
+
+1. 索引使用情况。
+2. 任务边界。
+3. 影响面检查。
+4. 验证选择依据。
+5. 索引维护。
 ```
 
 ## 7. Output Format
@@ -217,10 +343,31 @@ Output a ready-to-copy task prompt:
 相关索引：
 ...
 
+AI index files to read：
+...
+
+Code intelligence index usage：
+...
+
 允许修改：
 ...
 
 禁止修改：
+...
+
+Allowed files / areas：
+...
+
+Forbidden files / areas：
+...
+
+Pre-edit Impact Check：
+...
+
+Expected affected areas：
+...
+
+Affected tests mapping required：
 ...
 
 技术/平台约束：
@@ -231,6 +378,18 @@ Output a ready-to-copy task prompt:
 
 验证命令：
 ...
+
+Validation plan：
+...
+
+Manual review items：
+...
+
+Post-execution index maintenance required：
+...
+
+Index maintenance expectation：
+no-index-update-needed / incremental-index-update / full-index-refresh-required
 
 必须停止并回报的情况：
 ...

@@ -1,6 +1,6 @@
-# 多平台软件受控 Skill 包 v2.2.0 使用说明
+# 多平台软件受控 Skill 包 v2.3.0 使用说明
 
-本版在 v2.1 的基础上将 `project-indexing` 升级为 v2.2.0 — Graph-aware Project Indexing。
+本版在 v2.2.0 的基础上将 `software-task-creation` 和 `controlled-software-task-execution` 增强为 v2.3.0 — Index-aware Task Creation & Controlled Execution。
 
 ## 1. 三个 Skill 的分工
 
@@ -13,10 +13,12 @@ project-indexing
 software-task-creation
 = 把用户想法整理成可执行任务 prompt
 = 自动在任务 prompt 中加入“完成后必须输出固定摘要”的要求
+= 生成索引感知型任务 prompt，要求读取项目权威文档和已有 docs/ai-index
 
 controlled-software-task-execution
 = 执行任务 / 轻量索引检查 / 任务后增量更新索引
 = 输出固定开发完成摘要
+= 执行前检查索引和影响面，执行后判断 no-index-update-needed / incremental-index-update / full-index-refresh-required
 ```
 
 ## 2. 为什么要加固定完成摘要
@@ -55,6 +57,35 @@ v2.2.0 只升级 `project-indexing`，不重构 `controlled-software-task-execut
 
 ## 4. 推荐工作流
 
+正确链路：
+
+```text
+project-indexing -> software-task-creation -> controlled-software-task-execution
+```
+
+Workflow: project-indexing -> software-task-creation -> controlled-software-task-execution.
+
+### v2.3.0 — Index-aware Task Creation & Controlled Execution
+
+v2.3.0 不重构 `project-indexing`。v2.2.0 仍然负责 Graph-aware Project Indexing；v2.3.0 让 Skill 2 和 Skill 3 形成完整索引闭环。
+
+1. 先使用 `project-indexing` 建立 / 刷新 / 审计 `docs/ai-index`。
+2. 再使用 `software-task-creation` 把用户需求转成索引感知型任务 prompt。
+3. 最后使用 `controlled-software-task-execution` 执行该 prompt。
+4. controlled execution 完成后必须判断是否需要更新 `docs/ai-index`。
+
+`software-task-creation` 生成的任务 prompt 应要求执行 Agent 读取项目权威文档和已有 AI index，包括 `PROJECT_INDEX.md`、`TEST_INDEX.md`、`CODE_INTELLIGENCE_INDEX.md`、`INDEX_CHANGELOG.md` 和平台索引，如存在。任务 prompt 还应明确 allowed files / areas、forbidden files / areas、stop conditions、Pre-edit Impact Check、affected tests mapping、Validation plan、Manual review items 和 Post-execution index maintenance required。
+
+`controlled-software-task-execution` 执行时应优先使用索引理解边界、影响面和验证范围；索引缺失、过期、不完整或冲突时必须记录 fallback reason。验证选择应参考 `TEST_INDEX.md`、`CODE_INTELLIGENCE_INDEX.md` affected tests mapping、package scripts、changed files、source area -> test mapping 和 README / docs。
+
+任务后索引维护结果必须是：
+
+1. `no-index-update-needed`
+2. `incremental-index-update`
+3. `full-index-refresh-required`
+
+如果索引需要刷新但未完成，不应建议进入下一步，除非用户明确要求跳过索引刷新。CodeGraph optional, not required；本包不安装 CodeGraph，不新增依赖，不修改 package / CI / MCP 配置。
+
 ### 第一次接入项目
 
 ```text
@@ -79,6 +110,7 @@ v2.2.0 只升级 `project-indexing`，不重构 `controlled-software-task-execut
 
 要求：
 任务 prompt 必须包含完成后按 Fixed Completion Summary Format 输出摘要。
+任务 prompt 必须要求执行 Agent 使用项目权威文档和已有 docs/ai-index，执行 Pre-edit Impact Check，选择 affected tests mapping，并完成 Post-execution index maintenance 判断。
 ```
 
 ### 执行任务
@@ -92,6 +124,7 @@ v2.2.0 只升级 `project-indexing`，不重构 `controlled-software-task-execut
 ...
 
 完成后必须按 Fixed Completion Summary Format 输出开发完成摘要。
+完成后必须判断是否需要更新 docs/ai-index。
 ```
 
 ## 5. 固定开发完成摘要字段
@@ -102,48 +135,53 @@ v2.2.0 只升级 `project-indexing`，不重构 `controlled-software-task-execut
 2. 主要输出。
 3. 实现内容。
 4. 索引更新。
-5. 验证已通过。
-6. 验证未通过 / 未执行。
-7. 回归验证。
-8. 高风险影响检查。
-9. 说明。
-10. Git 状态。
-11. 是否建议进入下一步。
+5. 索引使用情况。
+6. 任务边界。
+7. 影响面检查。
+8. 验证选择依据。
+9. 索引维护。
+10. 验证已通过。
+11. 验证未通过 / 未执行。
+12. 回归验证。
+13. 高风险影响检查。
+14. 说明。
+15. Git 状态。
+16. 是否建议进入下一步。
 
 ## 6. 安装到 Codex / 通用 .agents
 
 ```bash
 cd 你的项目根目录
-unzip software-controlled-skills-multiplatform-kit-v2_2.zip
-cp -R software-controlled-skills-multiplatform-kit-v2_2/.agents ./
-cp software-controlled-skills-multiplatform-kit-v2_2/AGENTS.example.md ./AGENTS.md
+unzip software-controlled-skills-multiplatform-kit-v2_3.zip
+cp -R software-controlled-skills-multiplatform-kit-v2_3/.agents ./
+cp software-controlled-skills-multiplatform-kit-v2_3/AGENTS.example.md ./AGENTS.md
 mkdir -p tasks
-cp software-controlled-skills-multiplatform-kit-v2_2/tasks/*.md ./tasks/
+cp software-controlled-skills-multiplatform-kit-v2_3/tasks/*.md ./tasks/
 ```
 
 ## 7. 安装到 Claude Code
 
 ```bash
 cd 你的项目根目录
-unzip software-controlled-skills-multiplatform-kit-v2_2.zip
+unzip software-controlled-skills-multiplatform-kit-v2_3.zip
 mkdir -p .claude/skills
-cp -R software-controlled-skills-multiplatform-kit-v2_2/.claude/skills/* .claude/skills/
+cp -R software-controlled-skills-multiplatform-kit-v2_3/.claude/skills/* .claude/skills/
 ```
 
 ## 8. 安装到 Trae
 
 ```bash
 cd 你的项目根目录
-unzip software-controlled-skills-multiplatform-kit-v2_2.zip
+unzip software-controlled-skills-multiplatform-kit-v2_3.zip
 mkdir -p .trae/rules
-cp software-controlled-skills-multiplatform-kit-v2_2/.trae/rules/project_rules.md .trae/rules/project_rules.md
+cp software-controlled-skills-multiplatform-kit-v2_3/.trae/rules/project_rules.md .trae/rules/project_rules.md
 ```
 
 ## 9. 安装到 Cursor
 
 ```bash
 cd 你的项目根目录
-unzip software-controlled-skills-multiplatform-kit-v2_2.zip
+unzip software-controlled-skills-multiplatform-kit-v2_3.zip
 mkdir -p .cursor/rules
-cp software-controlled-skills-multiplatform-kit-v2_2/.cursor/rules/*.mdc .cursor/rules/
+cp software-controlled-skills-multiplatform-kit-v2_3/.cursor/rules/*.mdc .cursor/rules/
 ```
