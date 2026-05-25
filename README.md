@@ -4,7 +4,7 @@
 
 Multi-platform software development skill kit for controlled task creation, project indexing, and task execution.
 
-This repository contains the v2.1 skill package for Codex-style agents, Claude Code, Trae, and Cursor. The package focuses on keeping software work auditable by requiring project indexes, bounded task prompts, and fixed completion summaries after execution.
+This repository contains the v2.2.0 skill package for Codex-style agents, Claude Code, Trae, and Cursor. The package focuses on keeping software work auditable by requiring project indexes, bounded task prompts, and fixed completion summaries after execution.
 
 ![Software Controlled Skills guide](assets/software-controlled-skills-guide.png)
 
@@ -25,7 +25,7 @@ This repository contains the v2.1 skill package for Codex-style agents, Claude C
 
 The package includes three coordinated skills:
 
-- `project-indexing`: initialize, rebuild, and audit AI-readable project indexes.
+- `project-indexing`: initialize, rebuild, and audit graph-aware AI-readable project indexes.
 - `software-task-creation`: convert rough requirements into executable task prompts.
 - `controlled-software-task-execution`: execute bounded software tasks, update indexes, and report fixed completion summaries.
 
@@ -43,9 +43,25 @@ For Claude Code, copy `.claude/skills` into the target project. For Cursor, copy
 
 See `USAGE.md` for the full workflow and example prompts.
 
+## Graph-aware Project Indexing
+
+v2.2.0 upgrades only `project-indexing`. It can record optional structured code intelligence such as CodeGraph, code graph MCP tools, symbol indexes, call graph data, dependency graph data, route graph data, and affected tests mapping when those sources already exist.
+
+CodeGraph is not a dependency of this package. The skill does not install CodeGraph, initialize `.codegraph/`, add package dependencies, add npm scripts, modify MCP configuration, or require every project to use a code graph. Project authority documents such as `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/`, `tasks/`, and `manifest.json` remain the source of truth for goals, boundaries, safety rules, and release rules.
+
+When structured code intelligence is unavailable, incomplete, stale, or unable to answer an indexing question, `project-indexing` falls back to the normal `docs/ai-index/` repository scan flow and records the fallback reason.
+
 ## Version
 
-Current package version: `2.1.0`.
+Current package version: `2.2.0`.
+
+### v2.2.0 — Graph-aware Project Indexing
+
+- Upgrades `project-indexing` with index source priority and structured code intelligence detection.
+- Adds graph-aware project index fields for entry points, key symbols, dependency summary, critical flows, fallback reasons, and uncertainty logs.
+- Expands test indexing with source area to affected tests mapping.
+- Adds optional `CODE_INTELLIGENCE_INDEX_TEMPLATE.md`.
+- Keeps CodeGraph and code graph MCP tools optional, local, and non-authoritative.
 
 Main v2.1 changes:
 

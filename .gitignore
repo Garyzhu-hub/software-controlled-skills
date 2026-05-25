@@ -2,11 +2,10 @@
 
 # Local archive and extracted staging directory
 *.zip
-software-controlled-skills-multiplatform-kit-v2_1/
+software-controlled-skills-multiplatform-kit-v2_*/
 
 # Editor and system files
 .idea/
 .vscode/
 *.swp
 *.tmp
-

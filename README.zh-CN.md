@@ -4,7 +4,7 @@
 
 这是一个面向多平台软件开发的受控 Skill 包，用于帮助 AI Agent 在开发过程中保持任务边界清晰、项目索引可追踪、阶段结果可审计。
 
-当前版本为 `2.1.0`，主要适配 Codex 风格 Agent、Claude Code、Trae 和 Cursor。
+当前版本为 `2.2.0`，主要适配 Codex 风格 Agent、Claude Code、Trae 和 Cursor。
 
 ![软件开发智能控制三技能使用说明](assets/software-controlled-skills-guide.png)
 
@@ -25,7 +25,9 @@
 
 ### `project-indexing`
 
-用于初始化项目索引、全量重建索引和索引审计。它会帮助 Agent 识别项目结构、平台类型、关键模块和后续开发需要关注的文件。
+用于初始化项目索引、全量重建索引和索引审计。v2.2.0 将它升级为 Graph-aware / Code-intelligence-aware Project Indexing Skill，会帮助 Agent 识别项目结构、平台类型、关键入口、关键 symbol / module、dependency graph 摘要、critical flows 和 affected tests 映射。
+
+CodeGraph 和其他 code graph MCP tools 只是可选结构化代码智能来源。本包不会安装 CodeGraph，不会初始化 `.codegraph/`，不会新增依赖、npm script 或 MCP 配置，也不会要求所有项目必须使用代码图谱。`AGENTS.md`、`CLAUDE.md`、`README`、`docs/`、`tasks/`、`manifest.json` 等项目权威文档始终高于代码图谱。
 
 ### `software-task-creation`
 
@@ -102,6 +104,16 @@ cp .cursor/rules/*.mdc /path/to/project/.cursor/rules/
 mkdir -p /path/to/project/.trae/rules
 cp .trae/rules/project_rules.md /path/to/project/.trae/rules/project_rules.md
 ```
+
+## v2.2.0 — Graph-aware Project Indexing
+
+- 仅升级 `project-indexing`，不重构另外两个核心 Skill。
+- 新增 Index Source Priority：项目权威文档、已有 AI 索引、可选 structured code intelligence、仓库文件配置、fallback raw search。
+- 新增 Structured Code Intelligence Detection：检测 `.codegraph/`、CodeGraph MCP tools、symbol / AST / call graph、dependency graph、test impact graph 和 graph freshness。
+- 增强 `PROJECT_INDEX_TEMPLATE.md`：新增 index strategy、authority document sources、structured code intelligence availability、key entry points、key symbols / modules、dependency summary、critical flows、fallback reason 和 uncertainty log。
+- 增强 `TEST_INDEX_TEMPLATE.md`：新增 source area 到 affected tests 的映射。
+- 新增可选 `CODE_INTELLIGENCE_INDEX_TEMPLATE.md`。
+- 普通项目没有 CodeGraph 时，仍然按现有 `docs/ai-index/` 流程完成索引。
 
 ## v2.1 更新
 

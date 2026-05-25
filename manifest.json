@@ -1,11 +1,21 @@
 {
   "name": "software-controlled-skills-multiplatform-kit",
-  "version": "2.1.0",
-  "description": "Split multi-platform software development skills with fixed completion summary format.",
+  "version": "2.2.0",
+  "title": "v2.2.0 — Graph-aware Project Indexing",
+  "description": "Split multi-platform software development skills with graph-aware project indexing and fixed completion summary format.",
   "skills": [
     "project-indexing",
     "software-task-creation",
     "controlled-software-task-execution"
+  ],
+  "updates_from_v2_1": [
+    "Upgraded only project-indexing to Graph-aware Project Indexing.",
+    "Added index source priority for authority documents, AI indexes, optional structured code intelligence, repository scans, and fallback raw search.",
+    "Added structured code intelligence detection for CodeGraph, code graph MCP tools, symbol / AST / call graph, dependency graph, and test impact graph.",
+    "Enhanced PROJECT_INDEX_TEMPLATE.md with graph-aware sections for entry points, key symbols / modules, dependency summary, critical flows, fallback reasons, and uncertainty logs.",
+    "Enhanced TEST_INDEX_TEMPLATE.md with source area to affected tests mapping.",
+    "Added optional CODE_INTELLIGENCE_INDEX_TEMPLATE.md.",
+    "Kept CodeGraph optional and non-authoritative; no dependencies, npm scripts, MCP config, or package manager files are required."
   ],
   "updates_from_v2_0": [
     "Added fixed completion summary format to controlled-software-task-execution.",
