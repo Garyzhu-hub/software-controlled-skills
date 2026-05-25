@@ -2,6 +2,21 @@
 
 ## 2026-05-25
 
+- Mode: incremental-index-update
+- Triggering task: README v2.3.0 explanation image refresh
+- Added assets:
+  - `assets/software-controlled-skills-v2_3-zh.png`
+  - `assets/software-controlled-skills-v2_3-en.png`
+- Updated documentation:
+  - `README.zh-CN.md`
+  - `README.md`
+- Index decision:
+  - No project structure, validation command, workflow, skill rule, dependency, CI, release, or package metadata changes were made.
+  - Existing `PROJECT_INDEX.md`, `TEST_INDEX.md`, and `CODE_INTELLIGENCE_INDEX.md` content remains accurate.
+  - `INDEX_CHANGELOG.md` was updated to record the docs asset change.
+- Uncertainty:
+  - None.
+
 - Mode: init
 - Triggering task: v2.3.0 self-index refresh + release packaging audit
 - Created index files:

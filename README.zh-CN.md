@@ -6,7 +6,7 @@
 
 当前版本为 `2.3.0`，主要适配 Codex 风格 Agent、Claude Code、Trae 和 Cursor。
 
-![软件开发智能控制三技能使用说明](assets/software-controlled-skills-guide.png)
+![软件受控技能包 v2.3.0 中文说明图](assets/software-controlled-skills-v2_3-zh.png)
 
 ## 项目内容
 
